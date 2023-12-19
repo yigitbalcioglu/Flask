@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}
+    Register Page
+{% endblock %}
+
+{% block content %}
+<body class="text-center">
+    <div class="container">
+        <form method="POST" class="form-signin" style="color:white">
+            {{ form.hidden_tag() }}
+            <img class="mb-4" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARMAAAC3CAMAAAAGjUrGAAAAtFBMVEX//wAAAP8AAPv4+AAAAPbU1FsAAPmurouqqovp6TI9Pd2enpU5Od04ON6ampfe3kDb20IgIOcjI+WAgLUSEvN8fLd2drxycr7Dw2hqasHCwm1oaMVkZMTAwHC9vXJiYse8vHb39x5gYM67u4JdXdK4uIZXV9RUVNTx8SeysohOTtbv7y1MTNmpqZBGRtmkpJHn5zkxMeKZmZsuLuGTk5uOjqDZ2UqIiKWDg7MNDfPQ0GDMzGUSdxF+AAADzUlEQVR4nO3WB3YTMRSFYV+cGExzqAmhmhAwmGJagLD/fVHMIR4/F3lG0qt3BdJ3/qOZXi+2tEPuA4jb0QDcRxC2/gMgTBo7HiBMGvsbSZgs7ngPYdJY/yEQJo3NX5IwudhCJGEy3+NLCJPG+o+AMGlsKZIwoZGECY3Eu0n/6QoR3yYrI3FtsuolcW7yZE0kfk3WvCSeTTZE4tRkYyQ+TZ5tjMSjyfj5FhF/JifbInFnkhCJN5OUSHyZpEXiyiQxEkcm4xepIm5MTtJFnJjsEokTk9OdRDyYTHaLxIPJrpHYN9k9EvMmLSIxbjJ+2YrEsslp8o+rF5NJy0gMm7xuLWLVZPKqA4lNk3afG8sm3SIxadIxEoMmnSOxZ9Llc2PTJEckxkyyRGLKJFMklkxyRWLHZPImH4kRk8sZRWyYZI3EhkneSCyYTDNHYsAkeyTqTQpEot2kRCS6TSZvy5AoNrlSSESvybRUJHpNykWi1aRkJEpNikai0qRwJBpNSkeiz6R8JOpM3lUQ0WUyrBGJLpM6kWgymb6vRaLGpFokakwqRqLF5ENNERUmw6qRqDCpHIkCk+qRyDepH4l0E45IhJuwRCLaZHqViUSuCVckck2GbJGINWGMRKgJayQyTXgjkWjCHYlAk2vcIJBmMuOPBMJMJEQCUSYyIoEkEyGRQI7J7Dq3xMW4Lf5NTiQQYjK7wc3QGDfHn93kRlgat4esl2Q+bhFxkYDdRNhLMh8vicBIwGsiMhKwmsiMBIwms4/cV187LpJP3BffMB4RwZGAyURyJGAxGYmOBBwmwiNBfRPxkaC6ifxIUNlk9Jn7ukmrSfKF+7KJqyeiJBJUNNESCaqZ6IkEtUwURYI6JqoiQRUTXZGggom2SFDeRF0kKG2iMBIUNvnKfbt2Kygyus19uZYrR6I0EpQzURsJipnojQSFTA4UR4IyJqojQQkT5ZGggIn2SJDdRH8kyG1iIBLkNTm4xX2bPMtIYiMSZDQ5s/CSzJeL5Bv3RTIuj4ihSJDJxFIkyGJyZuRz83/dSYxFgu4m5iJBZxN7kaCjicVI0M3EZCToYmI0EnQwsRoJWpvs3+U+eMG1I/nOfeyii0joIhK6iIRuV5I73AeusIiELiKhi0joIhK6VJFzL5Eg2cRPJEg08RQJ0kzucR+y8raL7P/gPmPtRSR02yLZ4z4gwyISuk0i5+5ekvkiErqIhG4dyX3ugzEuIqGLSOhWiPz0+E+yuIiELiKhi0joIhK6iIQuIqGLSOgiErqIhC4ioftNcsh9BmnrHQ24jyBuvwDz8YNlp8YJEQAAAABJRU5ErkJggg==" alt="">
+            <h1 class="h3 mb-3 font-weight-normal">
+                 Lütfen Hesabınıza Giriniz
+            </h1>
+            <br>
+            {{ form.username.label() }}
+            {{ form.username(class="form-control", placeholder="Kullanıcı Adı:") }}
+
+            {{ form.password.label() }}
+            {{ form.password(class="form-control", placeholder="Şifre") }}
+
+            <br>
+
+
+            <div class="checkbox mb-3">
+               <h6>Hesabınız yok mu?</h6>
+               <a class="btn btn-sm btn-secondary" href="{{ url_for('register_page') }}">Kayıt Ol</a>
+            </div>
+
+            {{ form.submit(class="btn btn-lg btn-block btn-primary") }}
+
+        </form>
+    </div>
+</body>
+{% endblock %}
