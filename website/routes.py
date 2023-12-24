@@ -85,19 +85,67 @@ def check_session_active(session_id):
     return False
 
 #@login_required
-@main.route('/api/events', methods=['POST'])
+@main.route('/api/create_event', methods=['POST'])
 def create_event():
     data = request.get_json()
     #title date owner id
     unique_id=str(uuid.uuid4())
-    new_event = Event(id=unique_id,title=data['title'], date=data['date'])
+    new_event = Event(id=unique_id,
+                      title=data['title'], 
+                      date=data['date'],
+                      start_time=data["start_time"],
+                      end_time=data["end_time"],
+                      category=data["category"])
     db.session.add(new_event)
     db.session.commit()
-    return jsonify({'message': 'new event created'}), 201
+    return jsonify({'message': 'new event created'}), 200
 
-@login_required
-@main.route('/api/events/<date>', methods=['GET'])
-def get_events(date):
+
+@main.route('/api/get_day_events', methods=['GET'])
+def get_day_events():
+    #data=request.get_json()
+    #date=data["date"]
+    #date = datetime.strptime(date, '%Y-%m-%d').date()
+    events = Event.query.filter_by(title="deneme123").all()
+    
+    return jsonify([{
+        'title': event.title,
+        'start_time': event.start_time.strftime('%H:%M:%S') if event.start_time else None,
+        'end_time': event.end_time.strftime('%H:%M:%S') if event.end_time else None,
+        'date': event.date.strftime('%Y-%m-%d') if event.date else None
+    } for event in events])
+
+@main.route('/api/weekevents', methods=['GET'])
+def get_week_events(date):
+    data=request.get_json()
+    date=data["date"]
+    clock=data["clock"]
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    events = Event.query.filter_by(date=date).all()
+    return jsonify([{
+        'id': event.id,
+        'title': event.title,
+        'date': event.date,
+    } for event in events])
+
+@main.route('/api/monthevents', methods=['GET'])
+def get_month_events(date):
+    data=request.get_json()
+    date=data["date"]
+    clock=data["clock"]
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    events = Event.query.filter_by(date=date).all()
+    return jsonify([{
+        'id': event.id,
+        'title': event.title,
+        'date': event.date,
+    } for event in events])
+
+@main.route('/api/yearevents', methods=['GET'])
+def get_year_events(date):
+    data=request.get_json()
+    date=data["date"]
+    clock=data["clock"]
     date = datetime.strptime(date, '%Y-%m-%d').date()
     events = Event.query.filter_by(date=date).all()
     return jsonify([{

@@ -9,7 +9,7 @@ from flask_migrate import Migrate
 def create_app():
 
     app=Flask(__name__)
-    CORS(app)
+    CORS(app, origins="http://127.0.0.1:5173/*")
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:psw231@localhost:5432/flask_db'
     app.config['SECRET_KEY']='sgdfg'
