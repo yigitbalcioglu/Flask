@@ -23,7 +23,8 @@ class Event(db.Model):
     
 class Session(db.Model):
     __tablename__="sessions"
-    user_id = db.Column(db.String(), db.ForeignKey('users.id'),primary_key=True)
+    session_id=db.Column(db.String(),primary_key=True)
+    user_id = db.Column(db.String(), db.ForeignKey('users.id'),nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
 

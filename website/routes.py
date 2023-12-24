@@ -62,7 +62,7 @@ def login_page():
     if (user):    
         if check_password_hash(user.password_hash,data["password"]):
             session=create_session(user.id)
-            return jsonify({"Message":"Success"})
+            return jsonify({"Message":"Success", "session_id":session.session_id})
         else:
             return jsonify(message="Şifreler uyuşmuyor"),406
     else:
@@ -70,6 +70,7 @@ def login_page():
     
 def create_session(user_id):
     new_session = Session(
+        session_id=str(uuid.uuid4()),
         user_id=user_id,
         expires_at=datetime.utcnow() + timedelta(minutes=30)
     )
