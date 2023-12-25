@@ -78,6 +78,13 @@ def create_session(user_id):
     db.session.commit()
     return new_session
 
+def delete_session(user_id):
+    sessions=Session.query.filter_by(user_id=user_id).all()
+    for session in sessions:
+         db.session.delete(session)
+    db.session.commit
+    
+    
 def check_session_active(session_id):
     session = Session.query.get(session_id)
     if session and session.is_active:
@@ -115,49 +122,11 @@ def get_day_events():
         'date': event.date.strftime('%Y-%m-%d') if event.date else None
     } for event in events])
 
-@main.route('/api/weekevents', methods=['GET'])
-def get_week_events(date):
-    data=request.get_json()
-    date=data["date"]
-    clock=data["clock"]
-    date = datetime.strptime(date, '%Y-%m-%d').date()
-    events = Event.query.filter_by(date=date).all()
-    return jsonify([{
-        'id': event.id,
-        'title': event.title,
-        'date': event.date,
-    } for event in events])
-
-@main.route('/api/monthevents', methods=['GET'])
-def get_month_events(date):
-    data=request.get_json()
-    date=data["date"]
-    clock=data["clock"]
-    date = datetime.strptime(date, '%Y-%m-%d').date()
-    events = Event.query.filter_by(date=date).all()
-    return jsonify([{
-        'id': event.id,
-        'title': event.title,
-        'date': event.date,
-    } for event in events])
-
-@main.route('/api/yearevents', methods=['GET'])
-def get_year_events(date):
-    data=request.get_json()
-    date=data["date"]
-    clock=data["clock"]
-    date = datetime.strptime(date, '%Y-%m-%d').date()
-    events = Event.query.filter_by(date=date).all()
-    return jsonify([{
-        'id': event.id,
-        'title': event.title,
-        'date': event.date,
-    } for event in events])
             
 @login_required
 @main.route('/logout')
 def logout_page():
-    logout_user()
+    delete_session(current_user.user_id)
     flash("You have been logged out!", category='info')
     return redirect(url_for("home_page"))
 
