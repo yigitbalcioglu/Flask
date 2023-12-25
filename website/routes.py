@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 #routesa initten app geliyor 
 main=Blueprint("main", __name__)
 
-@main.route('/<int:user_id>')
-@main.route('/home/<int:user_id>')
+@main.route('/')
+@main.route('/home')
 def home_page(user_id):
     render_template('home.html')
 
