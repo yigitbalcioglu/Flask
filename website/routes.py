@@ -97,15 +97,23 @@ def create_event():
     data = request.get_json()
     #title date owner id
     unique_id=str(uuid.uuid4())
-    new_event = Event(id=unique_id,
+    data["category"]= str(data["category"]).lower()
+    categories=["hobby", "study", "sports", "chores","miscellaneous"]
+    
+    if data["category"] not in categories:
+        return jsonify("Category is not valid!"),201
+    else:
+        new_event = Event(id=unique_id,
                       title=data['title'], 
                       date=data['date'],
                       start_time=data["start_time"],
                       end_time=data["end_time"],
                       category=data["category"])
-    db.session.add(new_event)
-    db.session.commit()
-    return jsonify({'message': 'new event created'}), 200
+        db.session.add(new_event)
+        db.session.commit()
+        return jsonify({'message': 'new event created'}), 200
+        
+    
 
 
 @main.route('/api/get_day_events', methods=['GET'])
