@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 
+
 class User(db.Model, UserMixin):
     __tablename__="users"
     id=db.Column(db.String(),primary_key=True)
@@ -22,6 +23,17 @@ class Event(db.Model):
     end_time=db.Column(db.DateTime, nullable=False)
     owner = db.Column(db.String(), db.ForeignKey('users.id'),nullable=True)
     category=db.Column(db.String(),nullable=False)
+    #günlük aylık veya yıllık şekilde 3 çeşit tekrarlama tipi var
+    #recurrence_type=db.Columm(db.Stri)
+    #recurrence_start_date=
+    #recurrence_end_date=
+    def duration_calculation(self):
+        sts=self.start_time
+        ste=self.end_time
+        t1=datetime.strptime(sts, "%H.%M.%S")
+        t2=datetime.strptime(ste, "%H.%M.%S")
+        delta= t2-t1
+        self.duration=delta.total_seconds()
     
 class Session(db.Model):
     __tablename__="sessions"
@@ -29,6 +41,12 @@ class Session(db.Model):
     user_id = db.Column(db.String(), db.ForeignKey('users.id'),nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)
+
+class FilePath(db.Model):
+    __tablename__ = "file_paths"
+    id = db.Column(db.String(), primary_key=True)
+    path = db.Column(db.String(), nullable=False, unique=True)
+    event_id = db.Column(db.String(), db.ForeignKey('events.id'), nullable=False)
 
 @property
 def is_active(self):

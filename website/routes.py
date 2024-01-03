@@ -1,11 +1,18 @@
 from .extensions import db
 from flask import render_template, redirect, url_for, flash, request,Blueprint,jsonify,make_response,session
-from .models import User,Event,Session
-from flask_login import login_user, logout_user, current_user,login_required
+from .models import User,Event,Session,FilePath
+from flask_login import current_user,login_required
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
-
+from datetime import datetime, timedelta,date
+from dateutil.rrule import rrule, MONTHLY, YEARLY, DAILY,HOURLY
+from flask_uploads import UploadSet, configure_uploads, ALL
+from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import os
 
 
 #routesa initten app geliyor 
@@ -34,7 +41,7 @@ def register_page():
     hashed_password=generate_password_hash(data["password"])
     
     user_to_create = User(id=unique_id,
-                        username=data['username'],
+                          username=data['username'],
                           email_address=data['email'],
                           password_hash=hashed_password)  # Burada şifre hash'lenmelidir
      # Kullanıcıyı veritabanına ekle
@@ -100,6 +107,8 @@ def create_event():
     data["category"]= str(data["category"]).lower()
     categories=["hobby", "study", "sports", "chores","miscellaneous"]
     
+    list(rrule(freq=MONTHLY, count=4, dtstart=data['date']))
+    
     if data["category"] not in categories:
         return jsonify("Category is not valid!"),201
     else:
@@ -108,7 +117,10 @@ def create_event():
                       date=data['date'],
                       start_time=data["start_time"],
                       end_time=data["end_time"],
-                      category=data["category"])
+                      category=data["category"],
+                      recurrence_type=data["recurrence_type"],
+                      recurrence_start_date=data["recurrence_start_date"],
+                      recurrence_end_date=data["recurrence_end_date"])
         db.session.add(new_event)
         db.session.commit()
         return jsonify({'message': 'new event created'}), 200
@@ -129,7 +141,153 @@ def get_day_events():
         'end_time': event.end_time.strftime('%H:%M:%S') if event.end_time else None,
         'date': event.date.strftime('%Y-%m-%d') if event.date else None
     } for event in events])
+    
+#burak'ın kodları
+@main.route('/delete_event/<id>', methods=['DELETE'])
+def delete_event(id):
+    #find the event to delete by its id
+    event_to_delete = Event.query.get(id)
+    if not event_to_delete:
+        return jsonify({'error': 'Event not found'}), #hata kodeu girilecek
+    #delete it from database
+    db.session.delete(event_to_delete)
+    db.session.commit()
+    #return confirmation message
+    return jsonify({'message': 'Event deleted.'}), 202
 
+
+@main.route('/update_event/<id>', methods=['PUT'])
+def update_event(id):
+    data = request.get_json()
+    #find the event to update by its id
+    event_to_update = Event.query.get(id)
+    if not event_to_update:
+        return jsonify({'error': 'Event not found'}), #hata kodu girilecek
+    #update the event (title, date)
+    event_to_update.title = data.get('title', event_to_update.title)
+    event_to_update.date = data.get('date', event_to_update.date)
+    db.session.commit()
+    return jsonify({'message': 'Event updated.'}), 203
+
+@main.route('/add_file_to_event/<id>', methods=['PUT'])
+def add_file_to_event(id):
+    event_to_add_file = Event.query.get(id)
+
+    if not event_to_add_file:
+        return jsonify({'error': 'Event not found'}), 404
+    
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join('uploads', filename)
+        file.save(file_path)
+        event_to_add_file.file_path = file_path 
+        db.session.commit()
+
+        file_path_id = str(uuid.uuid4())
+        
+        file_path_obj = FilePath(id=file_path_id, path=file_path, event_id=event_to_add_file.id)
+        db.session.add(file_path_obj)
+        db.session.commit()
+        return jsonify({'message': 'File uploaded successfully', 'filename': filename}), 204
+    else:
+        return jsonify({'error': 'Invalid or missing file'}), 406
+
+def allowed_file(filename):
+    allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+@main.route('/delete_file_from_event/<event_id>/<file_path_id>', methods=['DELETE'])
+def delete_file_from_event(event_id, file_path_id):
+    event_to_delete_file = Event.query.get(event_id)
+    
+    if not event_to_delete_file:
+        return jsonify({'error': 'Event not found'}), 404
+
+    file_path_obj = FilePath.query.get(file_path_id)
+
+    if not file_path_obj or file_path_obj.event_id != event_to_delete_file.id:
+        return jsonify({'error': 'File path not found for the event'}), 404
+
+    db.session.delete(file_path_obj)
+    os.remove(file_path_obj.path)
+    db.session.commit()
+
+    return jsonify({'message': 'File deleted successfully'}), 204
+
+
+@main.route('/api/events/summary', methods=['GET'])
+def show_summary():
+    data = request.get_json()
+    year = data["year"]
+    month = data["month"]
+    day = data["day"]
+    d = date(int(year),int(month), int(day))
+    categories = {
+        "hobby": 0, 
+        "study": 0,
+        "sports": 0,
+        "chores": 0,
+        "miscellaneous": 0
+    }
+    
+    time_period = data["time_period"]
+    if time_period == 1:
+        
+        if not (Event.query.filter_by(date=d).all()):
+            return jsonify({'message': 'no events available'})
+        else:
+            for event in Event.query.filter_by(date=d).all():
+                duration = float(event.duration)
+                categories[event.category] += duration
+            plt.pie(values, labels=labels, autopct='%1.1f%%')
+            plt.show() 
+        
+    elif time_period == 2 :
+        week = d.strftime("%W")
+        for event in Event.query.all():
+            if event.date.strftime("%Y") == year and event.date.strftime("%W") == week:
+                duration = float(event.duration)
+                categories[event.category] += duration
+        labels = list(categories.keys())
+        values = list(categories.values())
+        if values.count(0) == 5:
+            return jsonify({'message': 'no events available'})
+        else:
+            plt.pie(values, labels=labels, autopct='%1.1f%%')
+            plt.show()
+                     
+                   
+    elif time_period == 3 :
+        for event in Event.query.all():
+            if event.date.strftime("%m") == month and event.date.strftime("%Y") == year:
+                duration = float(event.duration)
+                categories[event.category] += duration
+        labels = list(categories.keys())
+        values = list(categories.values())
+        if values.count(0) == 5:
+            return jsonify({'message': 'no events available'})
+        else:
+            plt.pie(values, labels=labels, autopct='%1.1f%%')
+            plt.show()
+            
+    elif time_period == 4 :
+        for event in Event.query.all():
+            if event.date.strftime("%Y") == year:     
+                duration = float(event.duration)
+                categories[event.category] += duration
+        labels = list(categories.keys())
+        values = list(categories.values())
+        if values.count(0) == 5:
+            return jsonify({'message': 'no events available'})
+        else:
+            plt.pie(values, labels=labels, autopct='%1.1f%%')
+            plt.show() 
+    
+    else:
+        return jsonify({'message': 'invalid number of time period'})
+
+    return jsonify({'message': 'summary has showed'})
             
 @login_required
 @main.route('/logout')

@@ -1,9 +1,10 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 from .extensions import db,bcrypt,login_manager
 from flask_cors import CORS
 from flask_migrate import Migrate
+from flask_uploads import UploadSet, configure_uploads, ALL
+import os
+
 
 
 def create_app():
@@ -14,6 +15,16 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:psw231@localhost:5432/flask_db'
     app.config['SECRET_KEY']='sgdfg'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Bu satır SQLAlchemy uyarılarını engeller
+    
+    #add_file_to_event
+    app.config['UPLOADED_FILES_DEST'] = '/Users/yigitbalcioglu/Desktop/Flask/website/uploads'
+    #add_file_to_event
+    files=UploadSet('files', ALL) 
+    configure_uploads(app, files)
+    uploads_folder = 'uploads'
+    if not os.path.exists(uploads_folder):
+        os.makedirs(uploads_folder)
+        
     
     from .routes import main as main_routes
     app.register_blueprint(main_routes)
