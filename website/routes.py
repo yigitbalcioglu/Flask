@@ -107,8 +107,10 @@ def create_event():
     data["category"]= str(data["category"]).lower()
     categories=["hobby", "study", "sports", "chores","miscellaneous"]
     
-    list(rrule(freq=MONTHLY, count=4, dtstart=data['date']))
-    
+    #list(rrule(freq=MONTHLY, count=4, dtstart=data['date']))
+    #recurrence_type=data["recurrence_type"],
+                      #recurrence_start_date=data["recurrence_start_date"],
+                      #recurrence_end_date=data["recurrence_end_date"])
     if data["category"] not in categories:
         return jsonify("Category is not valid!"),201
     else:
@@ -117,10 +119,8 @@ def create_event():
                       date=data['date'],
                       start_time=data["start_time"],
                       end_time=data["end_time"],
-                      category=data["category"],
-                      recurrence_type=data["recurrence_type"],
-                      recurrence_start_date=data["recurrence_start_date"],
-                      recurrence_end_date=data["recurrence_end_date"])
+                      category=data["category"])
+                      
         db.session.add(new_event)
         db.session.commit()
         return jsonify({'message': 'new event created'}), 200
