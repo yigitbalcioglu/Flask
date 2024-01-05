@@ -9,9 +9,7 @@ from dateutil.rrule import rrule, MONTHLY, YEARLY, DAILY,HOURLY
 from flask_uploads import UploadSet, configure_uploads, ALL
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
-import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 import os
 
 
@@ -107,7 +105,7 @@ def create_event():
     data["category"]= str(data["category"]).lower()
     categories=["hobby", "study", "sports", "chores","miscellaneous"]
     
-    #list(rrule(freq=MONTHLY, count=4, dtstart=data['date']))
+    #list(rrule(freq=str(data["reccurence"]).upper(), count=data["recccurence_time"], dtstart=data['date'],until=data["end_time"]))
     #recurrence_type=data["recurrence_type"],
                       #recurrence_start_date=data["recurrence_start_date"],
                       #recurrence_end_date=data["recurrence_end_date"])
@@ -130,9 +128,9 @@ def create_event():
 
 @main.route('/api/get_day_events', methods=['GET'])
 def get_day_events():
-    #data=request.get_json()
-    #date=data["date"]
-    #date = datetime.strptime(date, '%Y-%m-%d').date()
+    data=request.get_json()
+    date=data["date"]
+    date = datetime.strptime(date, '%Y-%m-%d').date()
     events = Event.query.filter_by(title="deneme123").all()
     
     return jsonify([{
