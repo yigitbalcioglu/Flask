@@ -30,7 +30,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar',
 def home_page(user_id):
     render_template('home.html')
 
-@main.route('/register', methods=['GET', 'POST'])
+@main.route('/register', methods=['POST'])
 def register_page():
 
     data = request.get_json()

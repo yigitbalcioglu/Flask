@@ -10,15 +10,12 @@ import os
 def create_app():
 
     app=Flask(__name__)
-    CORS(app, origins="http://127.0.0.1:5173/*")
+    CORS(app, origins="*")
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:psw231@localhost:5432/flask_db'
     app.config['SECRET_KEY']='sgdfg'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Bu satır SQLAlchemy uyarılarını engeller
     
-    CLIENT_SECRETS_FILE = "client_secret.json"
-    SCOPES = ['https://www.googleapis.com/auth/calendar',
-          'https://www.googleapis.com/auth/calendar.events.owned']
     
     #add_file_to_event
     app.config['UPLOADED_FILES_DEST'] = '/Users/yigitbalcioglu/Desktop/Flask/website/uploads'
