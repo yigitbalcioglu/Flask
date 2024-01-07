@@ -1,5 +1,6 @@
 from .extensions import db
 from flask import render_template, redirect, url_for, flash, request,Blueprint,jsonify,make_response,session
+import flask
 from .models import User,Event,Session,FilePath
 from flask_login import current_user,login_required
 import uuid
@@ -11,10 +12,18 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 import matplotlib.pyplot as plt
 import os
-
+import requests
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
 
 #routesa initten app geliyor 
 main=Blueprint("main", __name__)
+
+CLIENT_SECRETS_FILE = "website/client_secret.json"
+SCOPES = ['https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events.owned']
+
+
 
 @main.route('/')
 @main.route('/home')
@@ -47,7 +56,7 @@ def register_page():
     try:
         db.session.add(user_to_create)
         db.session.commit()
-        return jsonify({"Message":"Success"})
+        return jsonify({"Message":"Success"}),200
         
     except Exception as e:
         db.session.rollback()
@@ -105,7 +114,7 @@ def create_event():
     data["category"]= str(data["category"]).lower()
     categories=["hobby", "study", "sports", "chores","miscellaneous"]
     
-    #list(rrule(freq=str(data["reccurence"]).upper(), count=data["recccurence_time"], dtstart=data['date'],until=data["end_time"]))
+   
     #recurrence_type=data["recurrence_type"],
                       #recurrence_start_date=data["recurrence_start_date"],
                       #recurrence_end_date=data["recurrence_end_date"])
@@ -286,7 +295,112 @@ def show_summary():
         return jsonify({'message': 'invalid number of time period'})
 
     return jsonify({'message': 'summary has showed'})
+
+@main.route('/friends/<user>', methods=['PUT', 'GET', 'DELETE'])
+def friends(user):
+    active_user = User.query.filter_by(username=user).first()
+    data = request.get_json()
+
+    if request.method == 'PUT':
+        if User.query.filter_by(username=data["friend"]).first():
+            active_user.friends += " " + data["friend"]
+            db.session.commit()
+            return jsonify({'message': f'{data["friend"]} added as a friend'}), 200
+        else:
+            return jsonify({'message': 'user can not be found'}), 201
+
+    if request.method == 'GET':
+        if not data["friend"]:
+            return jsonify({'message': f'{active_user.friends}'}), 200
+        elif active_user.username in User.query.filter_by(username=data["friend"]).first().friends.split():
+            return Event.query.filter_by(owner=data["friend"], access_level="public").all()
+        else:
+            return jsonify({'message': f'You can not access to events of {data["friend"]}'})
+
+    if request.method == 'DELETE':
+        friends_list = active_user.friends.split()
+        if data["friend"] in friends_list:
+            friends_list = set(friends_list)
+            friends_list.discard(data["friend"])
+            friends_list = list(friends_list)
+            active_user.friends = " ".join(friends_list)
+            db.session.commit()
+            return jsonify({'message': f'{data["friend"]} is no longer your friend.'}), 200
+        else:
+            return jsonify({'message': f'{data["friend"]} is not in your friends list.'}), 201
+
+@main.route("/authorize")
+def oauth2():
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES)
+
+    flow.redirect_uri = flask.url_for('main.oauth2callback', _external=True)
+
+    authorization_url, state = flow.authorization_url(
+      access_type='offline',
+      include_granted_scopes='true')
+
+    flask.session['state'] = state
+
+    return flask.redirect(authorization_url) 
+        
+@main.route("/credentials")
+def credentials():
+    if flask.session["credentials"]:
+        return flask.jsonify(flask.session["credentials"])
+
+@main.route('/revoke')
+def revoke():
+    if 'credentials' not in flask.session:
+        return ('You need to <a href="/authorize">authorize</a> before ' +
+                'testing the code to revoke credentials.')
+
+    credentials = google.oauth2.credentials.Credentials(
+        **flask.session['credentials'])
+
+    revoke = requests.post('https://oauth2.googleapis.com/revoke',
+                           params={'token': credentials.token},
+                           headers = {'content-type': 'application/x-www-form-urlencoded'})
+
+    status_code = getattr(revoke, 'status_code')
+    if status_code == 200:
+        return 'Credentials successfully revoked.'
+    else:
+        return 'An error occurred.'
             
+@main.route('/clear')
+def clear_credentials():
+    if 'credentials' in flask.session:
+        del flask.session['credentials']
+        return "Credentials cleared"
+
+
+@main.route("/oauth2callback")
+def oauth2callback():
+    state = flask.session['state']
+
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES)
+    flow.redirect_uri = flask.url_for('main.oauth2callback', _external=True)
+
+    authorization_response = flask.request.url
+    flow.fetch_token(authorization_response=authorization_response)
+
+    credentials = flow.credentials
+    flask.session['credentials'] = credentials_to_dict(credentials)
+
+    return flask.redirect(flask.url_for('home'))
+
+
+def credentials_to_dict(credentials):
+    return {'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes}
+
+
 @login_required
 @main.route('/logout')
 def logout_page():

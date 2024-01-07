@@ -16,6 +16,10 @@ def create_app():
     app.config['SECRET_KEY']='sgdfg'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Bu satır SQLAlchemy uyarılarını engeller
     
+    CLIENT_SECRETS_FILE = "client_secret.json"
+    SCOPES = ['https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events.owned']
+    
     #add_file_to_event
     app.config['UPLOADED_FILES_DEST'] = '/Users/yigitbalcioglu/Desktop/Flask/website/uploads'
     #add_file_to_event

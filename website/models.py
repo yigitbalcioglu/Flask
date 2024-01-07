@@ -13,6 +13,7 @@ class User(db.Model, UserMixin):
     email_address = db.Column(db.String(length=50), nullable=False, unique=True)
     password_hash = db.Column(db.String(length=256), nullable=False)
     events = db.relationship('Event', backref='owned_user', lazy=True)
+    friends = db.Column(db.String(), nullable=True)
 
 class Event(db.Model):
     __tablename__="events"
@@ -23,6 +24,7 @@ class Event(db.Model):
     end_time=db.Column(db.DateTime, nullable=False)
     owner = db.Column(db.String(), db.ForeignKey('users.id'),nullable=True)
     category=db.Column(db.String(),nullable=False)
+    access_level = db.Column(db.String(), nullable=True)
     #günlük aylık veya yıllık şekilde 3 çeşit tekrarlama tipi var
     #recurrence_type=db.Columm(db.Stri)
     #recurrence_start_date=
