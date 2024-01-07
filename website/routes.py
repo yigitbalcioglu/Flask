@@ -80,7 +80,7 @@ def login_page():
         else:
             return jsonify(message="Şifreler uyuşmuyor"),406
     else:
-        return jsonify(message="Başarısız"), 404
+        return jsonify(message="Başarısız"), 405
     
 def create_session(user_id):
     new_session = Session(
@@ -137,9 +137,6 @@ def create_event():
 
 @main.route('/api/get_day_events', methods=['GET'])
 def get_day_events():
-    data=request.get_json()
-    date=data["date"]
-    date = datetime.strptime(date, '%Y-%m-%d').date()
     events = Event.query.filter_by(title="deneme123").all()
     
     return jsonify([{

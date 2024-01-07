@@ -10,7 +10,7 @@ import os
 def create_app():
 
     app=Flask(__name__)
-    CORS(app, origins="*")
+    CORS(app, origins="*", supports_credentials=True)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:psw231@localhost:5432/flask_db'
     app.config['SECRET_KEY']='sgdfg'
